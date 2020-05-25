@@ -1,22 +1,17 @@
 package chat;
 
-import java.awt.BorderLayout;
 import java.io.File;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import com.sun.deploy.uitoolkit.impl.fx.ui.FXConsole;
-import com.sun.xml.internal.bind.v2.runtime.output.ForkXmlOutput;
 import com.sun.xml.internal.ws.message.stream.StreamMessage;
 
 import javafx.application.Application;
@@ -24,8 +19,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
