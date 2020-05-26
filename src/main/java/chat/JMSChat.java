@@ -1,6 +1,8 @@
 package chat;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -10,11 +12,11 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-
-import com.sun.xml.internal.ws.message.stream.StreamMessage;
+import org.apache.activemq.util.ByteArrayInputStream;
 
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -145,6 +147,24 @@ public class JMSChat extends Application {
 			}
 		});
 		
+		buttonEnvoyerImage.setOnAction(evt -> {
+			try {
+				StreamMessage streamMessage = (StreamMessage) session.createStreamMessage();
+				streamMessage.setStringProperty("code", textFieldTo.getText());
+				File f4 = new File("images/"+comboBoxImages.getSelectionModel().getSelectedItem());
+				FileInputStream fis = new FileInputStream(f4);
+				byte[] data = new byte[(int)f4.length()];
+				fis.read(data);
+				streamMessage.writeString(comboBoxImages.getSelectionModel().getSelectedItem());
+				streamMessage.writeInt(data.length);
+				streamMessage.writeBytes(data);
+				messageProducer.send(streamMessage);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		});
+		
 		buttonConnecter.setOnAction(event -> {
 			try {
 				codeUser = textFieldCode.getText();
@@ -165,7 +185,15 @@ public class JMSChat extends Application {
 							TextMessage textMessage = (TextMessage) message;
 							observableListMessages.add(textMessage.getText());
 						} else if (message instanceof StreamMessage) {
-							
+							StreamMessage streamMessage = (StreamMessage)message;														
+							String nomPhoto = streamMessage.readString();
+							observableListMessages.add("Réception d'une photo:"+nomPhoto);
+							int size = streamMessage.readInt();
+							byte[] data = new byte[size];
+							streamMessage.readBytes(data);
+							ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+							Image image2 = new Image(byteArrayInputStream);
+							imageView.setImage(image2);
 						}
 					} catch (JMSException e) {
 						e.printStackTrace();
