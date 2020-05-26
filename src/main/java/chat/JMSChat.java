@@ -4,9 +4,11 @@ import java.io.File;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
@@ -41,6 +43,10 @@ import javafx.stage.Stage;
  
 public class JMSChat extends Application {
 
+	private MessageProducer messageProducer;
+	private Session session;
+	private String codeUser;
+	
 	public static void main(String[] args) {
 		Application.launch(JMSChat.class);
 	}
@@ -126,23 +132,38 @@ public class JMSChat extends Application {
 				imageView.setImage(image);
 			}
 		});
+		
+		buttonEnvoyer.setOnAction(evt -> {
+			try {
+				TextMessage textMessage = session.createTextMessage();
+				textMessage.setStringProperty("code", textFieldTo.getText());
+				textMessage.setText(textAreaMessage.getText());
+				messageProducer.send(textMessage);
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
+		
 		buttonConnecter.setOnAction(event -> {
 			try {
-				String codeUser = textFieldCode.getText();
+				codeUser = textFieldCode.getText();
 				String host = textFieldHost.getText();
 				int port = Integer.parseInt(textFieldPort.getText());
 				ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
 						"tcp://"+host+":"+port);
 				Connection connection = connectionFactory.createConnection();
 				connection.start();
-				Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+				session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 				Destination destination = session.createTopic("enset.chat");
-				MessageConsumer messageConsumer = session.createConsumer(destination);//, "code='"+codeUser+"'");
+				MessageConsumer messageConsumer = session.createConsumer(destination, "code='"+codeUser+"'");
+				messageProducer = session.createProducer(destination);
+				messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 				messageConsumer.setMessageListener(message -> {
 					try {
 						if (message instanceof TextMessage) {
 							TextMessage textMessage = (TextMessage) message;
-							System.out.println(textMessage.getText());
+							observableListMessages.add(textMessage.getText());
 						} else if (message instanceof StreamMessage) {
 							
 						}
@@ -150,6 +171,7 @@ public class JMSChat extends Application {
 						e.printStackTrace();
 					}
 				});
+				xBox.setDisable(true);
 			} catch (JMSException e) {
 				e.printStackTrace();
 			}
